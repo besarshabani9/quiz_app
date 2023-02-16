@@ -5,12 +5,6 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 
 void main() => runApp(MyApp());
 
-// void main() {
-//   runApp(
-//     MyApp(),
-//   );
-// }
-
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -40,40 +34,54 @@ class quizPage extends StatefulWidget {
 class _quizPageState extends State<quizPage> {
   bool buttonState = true;
   int questionIndex = 0;
+  int rightAnswers = 0;
   List<Icon> trackAnswer = [];
   QuizzHelper quizHelper = QuizzHelper();
 
-  void checkAnswer(bool userAnswer) async {
-    int questionsNo = quizHelper.getQuestionsNo();
+  void checkAnswer(bool userAnswer) {
+    setState(() {
+      int questionsNo = quizHelper.getQuestionsNo();
 
-    if (quizHelper.getQuestionAnswer(questionIndex) == userAnswer) {
-      trackAnswer.add(const Icon(
-        Icons.check,
-        color: Colors.green,
-        size: 35.0,
-      ));
-    } else {
-      trackAnswer.add(const Icon(
-        Icons.close,
-        color: Colors.red,
-        size: 35.0,
-      ));
-    }
-
-    if (questionIndex == questionsNo - 1) {
-      questionIndex = 0;
-      await Future.delayed(const Duration(seconds: 1));
-      Alert(
-        context: context,
-        title: "Quiz App",
-        desc: "End of questions!",
-      ).show();
-      trackAnswer.clear();
-    } else {
-      if (questionIndex < questionsNo - 1) {
-        questionIndex++;
+      if (quizHelper.getQuestionAnswer(questionIndex) == userAnswer) {
+        trackAnswer.add(const Icon(
+          Icons.check,
+          color: Colors.green,
+          size: 35.0,
+        ));
+        rightAnswers++;
+      } else {
+        trackAnswer.add(const Icon(
+          Icons.close,
+          color: Colors.red,
+          size: 35.0,
+        ));
       }
-    }
+
+      if (questionIndex == questionsNo - 1) {
+        buttonState = false;
+        resetQuiz();
+      } else {
+        if (questionIndex < questionsNo - 1) {
+          questionIndex++;
+        }
+      }
+    });
+  }
+
+  void resetQuiz() async {
+    await Future.delayed(const Duration(seconds: 2));
+    Alert(
+      context: context,
+      title: "Quiz App",
+      desc: "End of questions! "
+          "\n Right answers : $rightAnswers "
+          "\n Wrong answers : ${quizHelper.getQuestionsNo() - rightAnswers}",
+    ).show();
+    buttonState = true;
+    questionIndex = 0;
+    rightAnswers = 0;
+    trackAnswer.clear();
+    setState(() {});
   }
 
   @override
@@ -109,11 +117,11 @@ class _quizPageState extends State<quizPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),
-              onPressed: () {
-                setState(() {
-                  checkAnswer(true);
-                });
-              },
+              onPressed: buttonState
+                  ? () {
+                      checkAnswer(true);
+                    }
+                  : null,
               child: const Text(
                 "True",
                 style: TextStyle(color: Colors.white, fontSize: 25.0),
@@ -129,11 +137,11 @@ class _quizPageState extends State<quizPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              onPressed: () {
-                setState(() {
-                  checkAnswer(false);
-                });
-              },
+              onPressed: buttonState
+                  ? () {
+                      checkAnswer(false);
+                    }
+                  : null,
               child: const Text(
                 "False",
                 style: TextStyle(color: Colors.white, fontSize: 25.0),
